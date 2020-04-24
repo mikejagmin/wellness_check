@@ -74,8 +74,9 @@
         }],
       dom: 'Bfrtip',
       buttons: ['copy',
-       {extend: 'excelHtml5', filename: 'ResponseReport_' + String(date)}
-      , {extend: 'pdfHtml5', filename: 'ResponseReport_' + String(date)}
+       {extend: 'excelHtml5', filename: 'ResponseReport_' + String(date), exportOptions: {orthogonal: 'export'}
+       }
+      , {extend: 'pdfHtml5', filename: 'ResponseReport_' + String(date), exportOptions: {orthogonal: 'export'}}
       , 'colvis'],
       "columnDefs": [{
         "searchable": false,
