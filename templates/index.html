@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block title %}
+   messenger
+{% endblock %}
+{% block body %}
+  <h2>{{ self.title() }}</h2>
+  <ul class="alerts">
+    <form name=filter action="{{ url_for('send') }}" method="post">
+      Message to Send: <input type="text" name="message_send" value="" size="50"  maxlength="200">
+      Number: <input type="text" name="text_num" value="" size="20"  maxlength="20">
+      <input type="submit" id="submit" value="send">
+    </form>
+    <br>
+
+    <form name=form action="{{ url_for('send') }}" method="post">
+      <table id="tbltbl" class="stripe row-border cell-border">
+      <thead>
+          <th align="left" size="5"><br>Messsage</th>
+
+      </thead>
+      <tbody>
+
+
+        <tr>
+          <td>{{ scats|safe }}</td>
+
+        </tr>
+
+    </tbody>
+    </table>
+    </form>
+
+
+
+  </ul>
+{% endblock %}

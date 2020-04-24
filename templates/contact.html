@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}
+Location Contact
+{% endblock %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='report.css') }}">
+<div class="container">
+<h2>{{ self.title() }}</h2>
+<ul class="compact table-bordered">
+  <form name=filter
+    action="{{ url_for('contact',phone_list=phone_search,loc_list=location_search,group_list=group_search) }}"
+    method="get">
+    Search for contacts. Please only filter on 1 field at a time:
+    <table id="divtable">
+      <thead>
+        <tr>
+          <th align="center" size="4">Location</th>
+          <th align="center" size="25">Group</th>
+          <th align="center" size="15">Phone</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td> <input type="text" name="location_search" value="{{loc_list}}" size="15" maxlength="25"></td>
+          <td> <input type="text" name="group_search" value="{{group_list}}" size="25" maxlength="50"></td>
+          <td> <input type="text" name="phone_search" value="{{phone_list}}" size="15" maxlength="15"></td>
+        </tr>
+      </tbody>
+    </table>
+    <input type="submit" id="get_list" value="Filter">
+  </form>
+  Update phone number for stations and click Publish
+  <strong>Remeber to use numbers only</strong> <br>
+
+  <form name=form action="{{ url_for('contact') }}" method="post" class="table compact">
+    <input type="submit" id="submit" value="Publish">
+    <table id="divtable" class="table compact">
+      <thead>
+        <tr>
+          <th align="center" size="5">Location</th>
+          <th align="center" size="30">Area</th>
+          <th align="center" size="30">Prefix</th>
+          <th align="center" size="12">Phone</th>
+          <th align="center" size="12">First Name</th>
+          <th align="center" size="12">Last Name</th>
+          <th align="center" size="5">Active</th>
+          <th align="center" size="5">WhatsApp</th>
+        </tr>
+      </thead>
+      <tbody {% for stat in locations %} <tr>
+        <td> <input type="text" name="location{{loop.index}}" value="{{ stat.location }}" size="15" maxlength="25"></td>
+        <td> <input type="text" name="area{{loop.index}}" value="{{ stat.area }}" size="30" maxlength="30"></td>
+        <td> <input type="text" name="country_code{{loop.index}}" value="{{ stat.country_code }}" size="5"
+            maxlength="5"></td>
+        <td> <input type="text" name="phone{{loop.index}}" value="{{ stat.phone }}" size="15" maxlength="15"></td>
+        <td> <input type="text" name="first_name{{loop.index}}" value="{{ stat.first_name }}" size="12" maxlength="50">
+        </td>
+        <td> <input type="text" name="last_name{{loop.index}}" value="{{ stat.last_name }}" size="12" maxlength="50">
+        </td>
+        <td> <input type="text" name="active{{loop.index}}" value="{{ stat.active }}" size="5" maxlength="1"></td>
+        <td> <input type="text" name="whatsapp{{loop.index}}" value="{{ stat.whatsapp }}" size="8" maxlength="1"></td>
+        <td><input type="hidden" name="row_id{{loop.index}}" value="{{ stat.row_id }}" size="20" maxlength="20"></td>
+        </tr>
+
+        {% endfor %}
+        <tr>
+          <td> <input type="text" name="location_new" value="" size="15" maxlength="25"></td>
+          <td> <input type="text" name="area_new" value="" size="30" maxlength="30"></td>
+          <td> <input type="text" name="country_code_new" value="1" size="5" maxlength="5"></td>
+          <td> <input type="text" name="phone_new" value="" size="15" maxlength="10"></td>
+          <td> <input type="text" name="first_name_new" value="" size="12" maxlength="50"></td>
+          <td> <input type="text" name="last_name_new" value="" size="12" maxlength="50"></td>
+          <td> <input type="text" name="active_new" value="1" size="5" maxlength="1"></td>
+          <td> <input type="text" name="whatsapp_new" value="0" size="8" maxlength="1"></td>
+        </tr>
+      </tbody>
+    </table>
+    <br><input type="submit" id="submit" value="Publish">
+  </form>
+</ul>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}
+  {{location}} Responses
+{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" type="text/css"
+  href="https://cdn.datatables.net/v/dt/dt-1.10.20/b-1.5.6/b-colvis-1.5.6/b-flash-1.5.6/b-html5-1.5.6/b-print-1.5.6/cr-1.5.0/fh-3.1.4/r-2.2.2/datatables.min.css" />
+
+<link rel="stylesheet" type="text/css"
+  href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.18/b-1.5.6/b-colvis-1.5.6/b-flash-1.5.6/b-html5-1.5.6/b-print-1.5.6/cr-1.5.0/fh-3.1.4/r-2.2.2/datatables.min.css" />
+
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='report.css') }}">
+  <ul class="alerts scatter_page">
+  <h2>{{location}} Responses</h2>
+  Page will refresh every 3 minutes
+  <form name=filter action="{{ url_for('.report',location=location) }}" method="get">
+    Location: <input type="text" id="location" name="location" value="{{location}}" size="10" maxlength="50">
+    <input type="submit" id="get_location" value="Filter">
+    </form>
+</ul>
+<table id="divtable" class="compact dt-responsive table-bordered" style="width:100%">
+    <thead class="datatables_header">
+        <th style="text-align:center" size="3"><br>ROW</th>
+        <th style="text-align:center" size="3"><br>LOC</th>
+        <th style="text-align:center" size="3"><br>Last Name</th>
+        <th style="text-align:center" size="3"><br>First Name</th>
+        <th style="text-align:center" size="3"><br>Country</th>
+        <th style="text-align:center" size="3"><br>Phone</th>
+        <th style="text-align:center" size="3"><br>Last Reply</th>
+        <th style="text-align:center" size="3"><br>Reply</th>
+    </thead>
+</table>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    var intserver = '';
+    var url = intserver + "/api/report?";
+    var date = new Date().toLocaleString(undefined, {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    loc = document.getElementById('location').getAttribute('value') || '';
+    if (loc.length >= 1){
+    url = url + "location=" + loc}
+    var t = $('#divtable').DataTable({
+      lengthChange: false,
+      processing: true,
+      pageLength: 200,
+      "ajax": {
+        "url": url,
+        "dataSrc": "results",
+      },
+      "columns": [{
+        "data": null
+      }, {
+        "data": "location"
+      }, {
+        "data": "last_name"
+      }, {
+        "data": "first_name"
+      }, {
+        "data": "country_code"
+      }, {
+        "data": "phone"
+      }, {
+        "data": "last_reply"
+    }, {
+        "data": "reply"
+        }],
+      dom: 'Bfrtip',
+      buttons: ['copy',
+       {extend: 'excelHtml5', filename: 'ResponseReport_' + String(date)}
+      , {extend: 'pdfHtml5', filename: 'ResponseReport_' + String(date)}
+      , 'colvis'],
+      "columnDefs": [{
+        "searchable": false,
+        "orderable": false,
+        "targets": 0,
+      },{
+          "targets": "_all",
+          "render": $.fn.dataTable.render.ellipsis(20)
+        },
+    ],
+      "order": [[1,2, 'asc']]
+    });
+    t.on('order.dt search.dt', function () {
+      t.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+        cell.innerHTML = i + 1;
+      });
+
+      t.buttons().container()
+        .appendTo('#divtable_wrapper .col-md-6:eq(0)');
+    }).draw();
+
+    setInterval(function () {
+      t.ajax.reload();
+    }, 180000);
+  });
+</script>
+{% endblock %}

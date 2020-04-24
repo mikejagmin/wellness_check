@@ -1,0 +1,28 @@
+
+<!doctype html>
+<head>
+
+</head>
+<title>{% block title %}MDO{% endblock %} | RT Alerts</title>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+<div class="page">
+  <h1>Station Text Contact List</h1>
+  <div class="navigation">
+
+  </div>
+  {% with flashes = get_flashed_messages() %}
+    {% if flashes %}
+      <ul class="flashes">
+      {% for message in flashes %}
+        <li>{{ alerts }}
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+  <div class="body">
+  {% block body %}{% endblock %}
+  </div>
+  <div class="footer">
+    Text Chat  &mdash; A Flask Application
+  </div>
+</div>

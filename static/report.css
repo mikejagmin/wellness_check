@@ -1,0 +1,225 @@
+html,
+body,
+#container {
+  margin: 0;
+  padding: 0;
+  height: calc(100vh - 50px);
+  /* font-family: "Courier New", Arial, Helvetica, sans-serif; */
+  font-family: "Arial Narrow", "Arial", "sans-serif";
+}
+
+
+
+.overlay {
+  /* display: none; */
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 998;
+  opacity: 1;
+  transition: all 0.5s ease-in-out;
+}
+.overlay.active {
+  display: block;
+  opacity: 1;
+}
+
+body .modal {
+  width: 80%; /* respsonsive width */
+  margin-left: 10%; /* width/2) */
+}
+
+
+
+
+.bold {
+  font-weight: bold;
+  font-size: 125%;
+}
+
+.tt {
+  position: fixed;
+  left: 100;
+}
+
+label {
+  font-weight: 100;
+  line-height: 50%;
+}
+
+/* navbar */
+.navbar-default {
+  background-color: #0033a0;
+  border-color: #e7e7e7;
+}
+
+.navbar-light {
+  background-color: #0033a0 !important;
+  color: #ffffff;
+}
+
+.navbar-light .navbar-nav .nav-link {
+  color: #ffffff;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+  color: #d4d4d0;
+}
+
+.bg-primary {
+  background-color: #0033a0 !important;
+}
+
+
+#scattertable {
+  min-width: 500px;
+  color: black;
+}
+
+
+hr {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+h1 {
+  display: inline;
+  font-size: 4.5rem;
+}
+
+
+container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  color: black;
+}
+
+.card {
+  font-size: 3.5vw;
+  color: hsl(0, 0%, 0%);
+  overflow: hidden;
+  word-wrap: break-all;
+}
+
+.center {
+  margin-right: 55px;
+  text-align: center;
+}
+
+
+body {
+  padding-top: 0rem;
+  padding-bottom: 0rem;
+  background-color: #002244;
+  color: white;
+}
+
+.row {
+  margin-bottom: 1rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+.row .row {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+.card-header {
+  padding: 0rem 0rem;
+  padding-top: 0rem;
+  padding-right: 0rem;
+  padding-bottom: 0rem;
+  padding-left: 0rem;
+  background-color: black;
+}
+
+.btn-link {
+  color: white;
+  font-weight: bold;
+  font-family: apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  font-size: 2.5rem;
+}
+
+#mobile_status{
+  background-color: #002244;
+}
+
+#editable{
+    background-color: #002244;
+}
+
+
+/* Datatables */
+table.dataTable thead tr {
+  background-color: #002244;
+}
+
+a {
+  color: #26776F;
+}
+
+a:hover {
+  color: #333;
+}
+
+#divtable{
+  color: black;
+  background-color: white
+}
+
+#editable{
+  color: black;
+  background-color: white
+}
+
+#divtable_filter{
+  color: white;
+}
+
+#fixtable{
+  color: black;
+  background-color: white
+}
+
+#fixtable_filter{
+  color: white;
+}
+
+#elsetable{
+  color: black;
+  background-color: white;
+}
+
+#elsetable_filter{
+  color: white;
+}
+
+#scattertable{
+  color: black;
+  background-color: white;
+  /* overflow-x: scroll; */
+}
+
+.scatter_page{
+  color: white;
+  background-color: #002244;
+  padding: 40px;
+  /* overflow-x: scroll; */
+}
+
+.datatables_header {
+  color: white;
+}
+
+.loadlist{
+  font-size: 3.5rem;
+  overflow-x: scroll
+}
+
+
+@media only screen and (max-width: 600px) {
+  #autoComplete {
+    width: 5rem;
+  }
