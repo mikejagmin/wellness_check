@@ -21,6 +21,8 @@ from twilio.rest import Client
 from config import Config
 from slackeventsapi import SlackEventAdapter
 import phonenumbers
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 twilio_client = Client(Config.TWILIO_SID, Config.TWILIO_TOKEN)
 
@@ -482,3 +484,137 @@ def reaction_parse(event):
                     channel=Config.log_channel, username='worker',
                     text='reaction Failed: ' + str(e)
                 )
+def create_excel(channel_name,user_id):
+    try:
+        con = pymysql.connect(host=Config.myhost,
+                            user=Config.myuser,
+                            password=Config.mypw,
+                            db=Config.mydb,
+                            charset='utf8mb4',
+                            cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+
+        api_response = slack_client.im_open(
+            user=user_id,
+        )
+        dm = api_response['channel']['id']
+        cur.execute("""Select location, first_name,last_name, country_code, phone,""" + \
+            """ DATE_FORMAT(last_reply, "%%c/%%d-%%H:%%i") as last_reply, reply """ + \
+            """ from contact where active = 1 and upper(location) like concat(%s,'%%') order by last_reply;""",
+                    (channel_name))
+        rows = cur.fetchall()
+        wb = Workbook()
+        dest_filename = channel_name + '_report.xlsx'
+        dest_filelocation = 'files/'+ dest_filename
+        ws1 = wb.active
+        ws1.title = channel_name
+        header = ['Location','First Name','Last Name','Phone', 'Last Reply','Reply']
+        ws1.append(header)
+        if len(rows) > 0:
+            for r in rows:
+                phone = format_phone('+' + r['country_code'] + r['phone'])
+                li = [r['location'],r['first_name'], r['last_name'],phone,r['last_reply'],r['reply']]
+                ws1.append(li)
+        else:
+            ws1['A2'].value = 'No Contacts Available'
+        wb.save(filename = dest_filelocation)
+
+        with io.open(dest_filelocation, 'rb') as f:
+                response = slack_client.files_upload(
+                    channels=dm, username='Reporter',icon_emoji="robot_face",
+                    file=f, filename=dest_filename, title= 'Report for ' + channel_name,
+                    text='Report for ' + channel_name
+                )
+
+    except Exception as e:
+        error = " Excel Create Error " + str(e)
+        slack_client.chat_postMessage(
+            channel=Config.log_channel,
+            icon_emoji="robot_face",
+            username="CSS Helper",
+            text=error)
+
+def noreply(user_id,view,hours):
+    try:
+        channel_blob = view.get('private_metadata').split('|')
+        channel_id = channel_blob[0]
+        channel_name = channel_blob[1]
+        channel_name = str(channel_name).upper()
+        blocks = view.get('blocks')
+        state = view.get('state')
+
+        api_response = slack_client.im_open(
+            user=user_id,
+        )
+        dm = api_response['channel']['id']
+        con = pymysql.connect(host=Config.myhost,
+                user=Config.myuser,
+                password=Config.mypw,
+                db=Config.mydb,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        cur.execute("""Select first_name,last_name, country_code, phone, location, """ + \
+            """ DATE_FORMAT(last_reply, "%%c/%%d-%%H:%%i") as last_reply """ + \
+            """ from contact where active = 1 and upper(location) like concat(%s,'%%') and """ + \
+            """ last_reply < DATE_ADD(utc_timestamp(), INTERVAL -%s HOUR) order by last_reply desc;""",
+        (channel_name, hours))
+        rows = cur.fetchall()
+        if len(rows) > 0:
+            body = channel_name.upper() + ' No Reply in last ' + hours + ' hours\n'
+            for r in rows:
+                phone = format_phone('+' + r['country_code'] + r['phone'])
+                body += r['location'] + ': ' + r['first_name'] + ' ' + r['last_name'] + ' ' + \
+                    phone + ' last reply: ' + r['last_reply'] + '\n'
+        else:
+            body = 'No matches found'
+        response = slack_client.chat_postMessage(
+            channel=dm,
+            icon_emoji="robot_face",
+            username="Helper",
+            text=body)
+    except Exception as e:
+        error = " No Reply Worker Error " + str(e)
+        slack_client.chat_postMessage(
+            channel=Config.log_channel,
+            icon_emoji="robot_face",
+            username="CSS Helper",
+            text=error)
+
+def dm_contacts(channel_name,user_id):
+    try:
+        con = pymysql.connect(host=Config.myhost,
+                                    user=Config.myuser,
+                                    password=Config.mypw,
+                                    db=Config.mydb,
+                                    charset='utf8mb4',
+                                    cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+
+        api_response = slack_client.im_open(
+            user=user_id,
+        )
+        dm = api_response['channel']['id']
+        cur.execute("""Select first_name,last_name, country_code, phone, location from contact where active = 1 and location = %s order by last_name;""",
+                    (channel_name))
+        rows = cur.fetchall()
+        if len(rows) > 0:
+            body = channel_name.upper() + ' Text Recipients\n'
+            for r in rows:
+                phone = format_phone('+' + r['country_code'] + r['phone'])
+                body += r['location'] + ': ' + r['first_name'] + ' ' + r['last_name'] + ' ' + phone + '\n'
+        else:
+            body = 'No text recipients'
+        response = slack_client.chat_postMessage(
+            channel=dm,
+            icon_emoji="robot_face",
+            username="CSS Helper",
+            text=body)
+            # print(api_response)
+    except Exception as e:
+        error = "DM Contacts Worker Error " + str(e)
+        slack_client.chat_postMessage(
+            channel=Config.log_channel,
+            icon_emoji="robot_face",
+            username="CSS Helper",
+            text=error)

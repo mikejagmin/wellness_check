@@ -29,6 +29,7 @@ from slackeventsapi import SlackEventAdapter
 import phonenumbers
 import pickle
 
+
 pool = ThreadPoolExecutor(3)
 
 
@@ -194,45 +195,41 @@ slack_events_adapter = SlackEventAdapter(
 def api_contacts():
     try:
         if request.values.get('command', None) == '/contacts':
-            con = pymysql.connect(host=Config.myhost,
-                                user=Config.myuser,
-                                password=Config.mypw,
-                                db=Config.mydb,
-                                charset='utf8mb4',
-                                cursorclass=pymysql.cursors.DictCursor)
-            cur = con.cursor()
-            channel_name=request.values.get('channel_name', '').upper()
-            # channel_name = 'tst'
-            user_id = request.values.get('user_id', None)
-            api_response = slack_client.im_open(
-                user=user_id,
-            )
-            dm = api_response['channel']['id']
-            cur.execute("""Select name, country_code, phone, location from contact where active = 1 and location = %s order by name;""",
-                        (channel_name))
-            rows = cur.fetchall()
-            if len(rows) > 0:
-                body = channel_name.upper() + ' Text Recipients\n'
-                for r in rows:
-                    phone = format_phone('+' + r['country_code'] + r['phone'])
-                    body += r['name'] + ' ' + phone + '\n'
-            else:
-                body = 'No text recipients'
-            response = slack_client.chat_postMessage(
-                channel=dm,
-                icon_emoji="robot_face",
-                username="CSS Helper",
-                text=body)
-                
-                # print(api_response)
+            try:
+                channel_name=request.values.get('channel_name', '').upper()
+                user_id = request.values.get('user_id', None)
+
+                queue.enqueue_call(
+                    dm_contacts, args=(channel_name,user_id), result_ttl=0)
+            except:
+                future = pool.submit(dm_contacts, (channel_name,user_id))
+                print('no queue for contacts')
+        else:
+            return('',500)
+
     except Exception as e:
         error = " Directory Error " + str(e)
         slack_client.chat_postMessage(
-            channel="CCT9Z8MT7",
+            channel=Config.log_channel,
             icon_emoji="robot_face",
             username="CSS Helper",
             text=error)
+    return ('', 200)
 
+@app.route("/api/excel", methods=['GET','POST'])
+def api_excel():
+    if request.values.get('command', None) == '/report':
+        try:
+            channel_name=request.values.get('channel_name', '').upper()
+            user_id = request.values.get('user_id', None)
+
+            queue.enqueue_call(
+                create_excel, args=(channel_name,user_id), result_ttl=0)
+        except:
+            future = pool.submit(create_excel, (channel_name,user_id))
+            print('no queue for excel')
+    else:
+            return('',500)
     return ('', 200)
 
 
@@ -280,9 +277,6 @@ def reaction_added(slack_events):
         # parse_message(slack_events)
         future = pool.submit(reaction_parse, (event))
         print('no queue')
-        # print(future.done())
-
-
 
 
 # Error events
@@ -324,6 +318,142 @@ def api_report():
     })
 
     return jsonresponse
+
+@app.route("/api/interactions", methods=['GET','POST'])
+def interactions():
+    # print(request.values)
+    try:
+    # if 1 ==1:
+        payload = json.loads(request.values.get('payload'))
+        # print(payload)
+        user_id = payload.get('user', {}).get('id','')
+        view = payload.get('view')
+        if view is not None:
+            callback_id = view.get('callback_id')
+
+            if callback_id == 'noresponse':
+                channel_blob = view.get('private_metadata').split('|')
+                channel_id = channel_blob[0]
+                channel_name = channel_blob[1]
+                channel_name = str(channel_name).upper()
+                blocks = view.get('blocks')
+                state = view.get('state')
+                if state is not None:
+                    values = state.get('values')
+                    hours = values['time_block']['time_input']['value']
+                    if len(hours) < 1:
+                        resp = jsonify('''{
+                        "response_action": "errors",
+                        "errors": {
+                            "flight_block": "Please enter hours since reply threshold"
+                            }
+                        }''')
+                        return (resp,200)
+                    else:
+                        try:
+                            queue.enqueue_call(
+                                noreply, args=(user_id,view,hours), result_ttl=0)
+                        except:
+                            # parse_message(slack_events)
+                            future = pool.submit(noreply, (user_id,view,hours))
+                            print('no queue')
+                            # print(future.done())
+                        return ('', 204)
+
+    except:
+        resp = jsonify(success=True)
+        resp.status_code = 200
+        return resp
+
+@app.route("/api/noresponse", methods=['GET','POST'])
+def noresponse():
+    # print(request.values)
+    # try:
+    if 1 ==1:
+        resp=MessagingResponse()
+        if request.values.get('command', None) =='/noreply':
+            print(request.values)
+            trigger=request.values.get('trigger_id', None)
+            channel_id=request.values.get('channel_id', None)
+            user_id=request.values.get('user_id', None)
+            channel_name=request.values.get('channel_name','').upper()
+            user_name=request.values.get('user_name', None)
+            text = request.values.get('text', '')
+
+            display_name = get_slack_display_name(user_id)
+
+
+            if len(text) > 0:
+                hours = text
+                hours_default = text
+            else:
+                hours = ''
+                hours_default = '24'
+            payload = '''{
+            "type":  "modal",
+            "title": {
+                "type": "plain_text",
+                "text": "''' + channel_name+ ''' Slow Responses",
+                "emoji": true
+            },
+            "submit": {
+                "type": "plain_text",
+                "text": "Send",
+                "emoji": true
+            },
+            "close": {
+                "type": "plain_text",
+                "text": "Cancel",
+                "emoji": true
+            },
+            "blocks":[
+            {
+                "type": "input",
+                "block_id": "time_block",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "time_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "HOURS"
+                    },
+                    "initial_value": "''' + hours + '''",
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Hours Since Reply"
+                },
+                "hint": {
+                    "type": "plain_text",
+                    "text": "Enter Hour Threshold"
+                }
+            },
+            {
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "This will send you a direct message with a list of contacts who have not responded in defined number of hours"
+			        }
+		    },
+            ],
+            "private_metadata": "''' + channel_id + '''|''' + channel_name + '''|''' + display_name + '''",
+            "callback_id": "noresponse",
+            }'''
+            # print(payload)
+            api_response = slack_client.views_open(
+                    trigger_id = trigger,
+                    view = payload,
+                )
+        # print(api_response)
+    # except Exception as e:
+    #     error = " No Response Error " + str(e)
+    #     slack_client.chat_postMessage(
+    #         channel=Config.log_channel,
+    #         icon_emoji="robot_face",
+    #         username=" Helper",
+    #         text=error)
+
+    return ''
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=80,debug=True)
