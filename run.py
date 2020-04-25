@@ -17,15 +17,17 @@ from rq import Queue
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, render_template, request, url_for, jsonify, abort, make_response, redirect
 from flask_basicauth import BasicAuth
+from functools import wraps
 
 # from message_parser import parse_message, redis_setex_handler, redis_get_handler, dict_factory, upload_from_file, save_image_to_storage
 from message_parser import *
 
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
+from twilio.request_validator import RequestValidator
 from slackeventsapi import SlackEventAdapter
 import phonenumbers
-
+import pickle
 
 pool = ThreadPoolExecutor(3)
 
@@ -55,10 +57,34 @@ r = redis.Redis(
 
 queue = Queue(Config.queue, connection=r)
 
-import pickle
+
     
+def validate_twilio_request(f):
+    """Validates that incoming requests genuinely originated from Twilio"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Create an instance of the RequestValidator class
+        validator = RequestValidator(Config.TWILIO_TOKEN)
+
+        # Validate the request using its URL, POST data,
+        # and X-TWILIO-SIGNATURE header
+        request_valid = validator.validate(
+            request.url,
+            request.form,
+            request.headers.get('X-TWILIO-SIGNATURE', ''))
+
+        # Continue processing the request if it's valid, return a 403 error if
+        # it's not
+        if request_valid:
+            return f(*args, **kwargs)
+        else:
+            return abort(403)
+    return decorated_function
+
+
 """Post incoming SMS to Slack"""
 @app.route("/sms", methods=['POST'])
+@validate_twilio_request
 def queue_sms():
     values = request.values.to_dict()
     # print(values)
