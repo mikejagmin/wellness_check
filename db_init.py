@@ -45,6 +45,10 @@ cur.execute("CREATE TABLE slack_users (id varchar(20), name varchar(25), PRIMARY
 con.commit()
 
 
+cur.execute("DROP TABLE IF EXISTS contact_modify;")
+cur.execute("CREATE TABLE contact_modify ( location varchar(25), area varchar(25), country_code varchar(5), phone varchar(15),whatsapp int,first_name varchar(50),last_name varchar(50),PRIMARY KEY(location, phone));")
+con.commit()
+
 # print('db initalized')
 
 

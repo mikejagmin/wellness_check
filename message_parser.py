@@ -148,6 +148,11 @@ def get_slack_display_name(id):
     else:
         return usr['name']
 
+    try:
+        con.close()
+    except:
+        lite_con.close()
+
 def send_message(message, to_who, whatsapp=0, media=None):
     # Send text through twilio
     b = ''
@@ -484,6 +489,7 @@ def reaction_parse(event):
                     channel=Config.log_channel, username='worker',
                     text='reaction Failed: ' + str(e)
                 )
+
 def create_excel(channel_name,user_id):
     try:
         con = pymysql.connect(host=Config.myhost,
@@ -518,6 +524,7 @@ def create_excel(channel_name,user_id):
         else:
             ws1['A2'].value = 'No Contacts Available'
         wb.save(filename = dest_filelocation)
+        con.close()
 
         with io.open(dest_filelocation, 'rb') as f:
                 response = slack_client.files_upload(
@@ -566,8 +573,10 @@ def noreply(user_id,view,hours):
                 phone = format_phone('+' + r['country_code'] + r['phone'])
                 body += r['location'] + ': ' + r['first_name'] + ' ' + r['last_name'] + ' ' + \
                     phone + ' last reply: ' + r['last_reply'] + '\n'
+            con.close()
         else:
             body = 'No matches found'
+            con.close()
         response = slack_client.chat_postMessage(
             channel=dm,
             icon_emoji="robot_face",
@@ -603,8 +612,10 @@ def dm_contacts(channel_name,user_id):
             for r in rows:
                 phone = format_phone('+' + r['country_code'] + r['phone'])
                 body += r['location'] + ': ' + r['first_name'] + ' ' + r['last_name'] + ' ' + phone + '\n'
+            con.close()
         else:
             body = 'No text recipients'
+            con.close()
         response = slack_client.chat_postMessage(
             channel=dm,
             icon_emoji="robot_face",

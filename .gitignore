@@ -130,3 +130,14 @@ dmypy.json
 
 # Config
 config.py
+
+# virtual env
+/slack/*
+
+#annoying files
+*.xlsx
+
+#files
+/files/*.jpg
+/files/*.jpeg
+/files/*.png

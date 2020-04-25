@@ -1,0 +1,31 @@
+class Config(object):
+    SLACK_BOT_TOKEN = 'xox-----'
+    SLACK_SIGNING_SECRET = ''
+    IMAGE_TOKEN = ''
+    TWILIO_SID = ""
+    TWILIO_TOKEN = ""
+    myhost = "localhost"
+    myuser = "root"
+    mypw = ""
+    mydb = "alerts"
+    TWILIO_NUM = "+11111111111"
+    login_user = 'admin'
+    login_password = 'Slack!'
+    log_channel = 'CHANNEL_ID'
+    escalation_channel = 'CHANNEL_ID'
+    redis_host = '127.0.0.1'
+    redis_port = '6379'
+    # For google cloud storage of picture messages to provide url to twilio
+    CLOUD_STORAGE_BUCKET = 'slack'
+    CLOUD_PROJECT = "slack"
+    GCS_TOKEN="gcs.json"
+
+    GC_IMAGE_SERVICE = False
+    BROADCAST_REPLY = False
+    w_app_template_header = 'You have a message from Demo:'
+    w_app_template_footer = 'Please confirm receipt'
+    #Send text responses out to entire group
+
+    bot_user = 'bot_user'
+    
+    queue = 'alert'
