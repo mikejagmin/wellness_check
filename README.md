@@ -43,7 +43,9 @@ A dataTables report is included which includes:
 * Export to pdf
 ![Example Of Web Report](/images/web_report.PNG)
 
-## Setup
+## Local Setup
+
+
 
 **Clone/Download this repoistory**
 Install a compatible version of Python (Built on 3.7 but believe it will work on 3.6 on)
@@ -52,25 +54,57 @@ Install a compatible version of Python (Built on 3.7 but believe it will work on
 pip install -r requirements.txt
 ```
 
-Install MySQL Server and create a database https://dev.mysql.com/downloads/
-Create Redis Queue (if desired, will run with futures if redis not avialable): https://redis.io/download
-Create Twilio account phone number with text capabilities.https://www.twilio.com/try-twilio
+* Install MySQL Server and create a database https://dev.mysql.com/downloads/  
+* Create Redis Queue (if desired, will run with futures if redis not avialable): https://redis.io/download  
+* Create Twilio account phone number with text capabilities: https://www.twilio.com/try-twilio  
+
+#### Below are the config variables you will need for the config.py
+
+| Config&nbsp;Value | Description                                                                                                                                                  |
+| :---------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account&nbsp;Sid  | Your primary Twilio account identifier - find this [in the Console](https://www.twilio.com/console).                                                         |
+| Auth&nbsp;Token   | Used to authenticate - [just like the above, you'll find this here](https://www.twilio.com/console).                                                         |
+| Phone&nbsp;number | A Twilio phone number in [E.164 format](https://en.wikipedia.org/wiki/E.164) - you can [get one here](https://www.twilio.com/console/phone-numbers/incoming) |
+
+#### Communicating with Twilio/Slack
+* Unless you are doing this on a remote server, you are going to need to tunnel a path for Slack/Twilio to connect to your local development enviornment.
+* I recommend ngrok for initial testing) https://ngrok.com/
+* A session should last 8 or more hours so I would start one up now, it will be needed in future steps
+
+**This is a good point to update the Twilio Incoming Web with your ngrok DNS**
+1. https://www.twilio.com/console/phone-numbers/incoming
+1. Click on the phone number to bring up Configuration Properties
+1. Naviate to: 
+   1. Messaging 
+   1. A Message comes In
+   1. Select 'Webhook'
+   1. Update with your ngrok URL https://your.address.com/sms
+   1. Select 'HTTP POST'
 
 **Update example_config.py and save as config.py**
 
-Script to create MySQL and SQLite databases.
+#### Run script to create MySQL and SQLite databases.
 ```
 python db_init.py 
 ``` 
 
+#### Boot Development Webserver
+I recommend this step here because Slack will ping the url's you enter in the app setup to validate them
 
-Boot Development Webserver: 
 ```
 python run.py -dev
 ```
 
-I used this tutorial to get this application to production (and using https!) following this tutorial: 
-https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04
+If you want to use redis queue/worker pattern:
+* Start Redis server instance (many ways to do this based on your os, and setup. My solution for my MacOS and Windows are below:
+ Mac -- https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8
+ Windows -- https://redislabs.com/ebook/appendix-a/a-3-installing-on-windows/a-3-2-installing-redis-on-window/
+
+
+* **If using queue/worker pattern otherwise skip this step**
+```
+python worker.py
+```
 
 Create a SLACK workspace if needed: https://slack.com/get-started#/
 
@@ -83,8 +117,8 @@ reaction_added
 **Your app will need to be added to the channels you want it to be able to post in.**
 
 Add SLACK_SIGNING_SECRET to config.py and update url to https://your.address.com/inbound/chats
-(I recommend ngrok for initial testing) https://ngrok.com/
-
+(I will again plug ngrok for initial testing) https://ngrok.com/
+   
 You Bot will need a token to interact with the workspace for the following scopes:
 channels:history View messages and other content in public channels that alerts has been added to
 channels:join Join public channels in the workspace
@@ -118,7 +152,6 @@ You may enable rebroadcasting of text responses back to all recipients assigned 
 ```
 BROADCAST_REPLY = True
 ``` 
-
 
 ## Slash Commands
 Currently there are 3 custom slash commands to assist with audting wellness checks:
@@ -154,3 +187,12 @@ Create New commands
 
 Navigate to 'Interactivity & Shortcuts'  
 **Requst URL:** https://yoursite.come/api/interactions  
+
+
+* Test sending a few messages back and forth with a personal device
+
+## Produtionalizing the Applciation
+
+I used this tutorial to get this application to production (and using https!) following this tutorial: 
+https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04
+
