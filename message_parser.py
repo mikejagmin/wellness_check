@@ -111,7 +111,6 @@ def format_phone(number):
     return formatted_num
 
 def get_slack_display_name(id):
-
     mysql = None
     if id is None:
         return 'CSS'
